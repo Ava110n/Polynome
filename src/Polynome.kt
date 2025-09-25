@@ -1,67 +1,79 @@
+import com.sun.source.util.Plugin
 import kotlin.math.*
 
 class Polynome {
-    var coeffs: DoubleArray
-    var degree: Int
-
-    constructor() {
-        coeffs = doubleArrayOf(0.0)
-        this.degree = 0
-    }
+    val coeffs: DoubleArray
+    val degree: Int
 
     constructor(coeffs: DoubleArray) {
-        this.coeffs = coeffs
-        this.degree = coeffs.size - 1
+        this.coeffs = clean(coeffs)
+        this.degree = this.coeffs.size - 1
+    }
+
+    constructor() : this(doubleArrayOf(0.0))
+    constructor(i: Int) : this(DoubleArray(i, { 0.0 }))
+
+    fun clean(coeffs: DoubleArray): DoubleArray {
+        var my_degree = coeffs.size-1
+        for (i in my_degree downTo 0) {
+            if (coeffs[i] == 0.0) my_degree -= 1
+            else break
+        }
+        my_degree = max(my_degree, 0)
+        var my_coeffs = DoubleArray(my_degree+1, {i:Int->coeffs[i]})
+        /*for(i in 0..my_degree+1){
+            my_coeffs[i] = this.coeffs[i]
+        }*/
+        return my_coeffs
     }
 
     override fun toString(): String {
         var str = ""
         for (i in this.degree downTo 0) {
             if (coeffs[i] == 0.0) continue
-            str += { c: Double -> if (c > 0) "+" else "-" }(coeffs[i])
-            if (str == "+") str = ""
-            str += abs(coeffs[i])
-            if (i > 0) str += "*x^${i}"
+            str += { c: Double -> if (c > 0) " + " else " - " }(coeffs[i])
+            if (str == " + ") str = ""
+            str += "${abs(coeffs[i])}"
+            if (i != 0) str += "*x^$i"
         }
         return str
     }
 
     operator fun plus(other: Polynome): Polynome {
         var my_degree = max(this.degree, other.degree)
-        var my_coeffs = DoubleArray(my_degree+1, { 0.0 })
+        var my_coeffs: DoubleArray = DoubleArray(my_degree + 1, { 0.0 })
         for (i in 0..my_degree) {
-            var c = { c: DoubleArray, d: Int ->
-                if (i > d) 0.0
-                else c[i]
-            }
-
-            var x = c(this.coeffs, this.degree)
-            var y = c(other.coeffs, other.degree)
-            my_coeffs[i] = x + y
+            val c = { c: DoubleArray, d: Int -> if (d >= i) c[i] else 0.0 }
+            val x = c(this.coeffs, this.degree)
+            val y = c(other.coeffs, other.degree)
+            my_coeffs[i] += x + y
         }
         return Polynome(my_coeffs)
     }
 
     operator fun times(k: Double):Polynome{
-        var my_coeffs = DoubleArray(this.degree+1, { 0.0 })
-        for(i in 0..this.degree){
-            my_coeffs[i] = this.coeffs[i]*k
-        }
-        return Polynome(my_coeffs)
+        return Polynome(DoubleArray(this.degree+1, {i:Int->coeffs[i]*k}))
     }
-    operator fun Double.times(p: Polynome) = p.times(this)
-    operator fun times(k: Int):Polynome = this.times(k*1.0)
-    operator fun Int.times(p: Polynome) = p.times(this)
+    //operator fun Double.times(p: Polynome) = p.times(this)
+    operator fun times(k: Int) = this.times(k*1.0)
+    //operator fun Int.times(p: Polynome) = p.times(this)
 
-    operator fun times(other: Polynome):Polynome{
-        var my_degree = this.degree+other.degree
-
-        return Polynome()
+    operator fun times(other:Polynome):Polynome{
+        var my_coeffs = DoubleArray(this.degree+other.degree+1, {0.0})
+        for(i in 0..this.degree)
+            for( j in 0..other.degree)
+                my_coeffs[i+j] += this.coeffs[i]*other.coeffs[j]
+        return Polynome(my_coeffs)
     }
 }
 
+operator fun Double.times(p: Polynome) = p.times(this)
+operator fun Int.times(p: Polynome) = p.times(this)
+
 fun main() {
-    var a = Polynome(doubleArrayOf(1.0, 2.0, -7.0))
-    var b = Polynome(doubleArrayOf(5.0,6.0,7.0))
-    println(a+b)
+    var a = Polynome(doubleArrayOf(1.0, 1.0))
+    var b = Polynome(doubleArrayOf(1.0, 1.0))
+    //var c = a + b
+    //println(c.degree)
+    println(a*b)
 }
