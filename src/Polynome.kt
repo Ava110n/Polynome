@@ -16,12 +16,12 @@ class Polynome {
 
     override fun toString(): String {
         var str = ""
-        for (i in 0..this.degree) {
+        for (i in this.degree downTo 0) {
             if (coeffs[i] == 0.0) continue
             str += { c: Double -> if (c > 0) "+" else "-" }(coeffs[i])
             if (str == "+") str = ""
             str += abs(coeffs[i])
-            if (i < this.degree) str += "*x^${degree - i}"
+            if (i > 0) str += "*x^${i}"
         }
         return str
     }
@@ -31,8 +31,8 @@ class Polynome {
         var my_coeffs = DoubleArray(my_degree+1, { 0.0 })
         for (i in 0..my_degree) {
             var c = { c: DoubleArray, d: Int ->
-                if (d < my_degree - i) 0.0
-                else c[i - my_degree + d]
+                if (i > d) 0.0
+                else c[i]
             }
 
             var x = c(this.coeffs, this.degree)
@@ -51,10 +51,17 @@ class Polynome {
     }
     operator fun Double.times(p: Polynome) = p.times(this)
     operator fun times(k: Int):Polynome = this.times(k*1.0)
+    operator fun Int.times(p: Polynome) = p.times(this)
+
+    operator fun times(other: Polynome):Polynome{
+        var my_degree = this.degree+other.degree
+
+        return Polynome()
+    }
 }
 
 fun main() {
-    var a = Polynome(doubleArrayOf(1.0, 2.0, 3.0))
-    var b = Polynome(doubleArrayOf(-1.0,6.0,7.0))
-    println(a*3.0)
+    var a = Polynome(doubleArrayOf(1.0, 2.0, -7.0))
+    var b = Polynome(doubleArrayOf(5.0,6.0,7.0))
+    println(a+b)
 }
